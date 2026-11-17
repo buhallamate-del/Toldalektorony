@@ -446,7 +446,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     ["eg:jart","Égtorony","../Egtorony/","A torony testvére: ott emeletenként nő az erő, itt emeletenként a jelentés."],
     ["mo:jart","Mézország","../Mezorszag/","Kaptárak: kaptár-a-i-nk-ban. Négy emelet egy szóban."],
     ["me:jart","Mélység","../Melyseg/","Lefelé: a Föld rétegei is egymásra épülnek, csak ott a tető van alul."],
-    ["jt:jart","Jeltörő","../Jel-toro/","Egy lehallgatóállomás, ahol a szavakat kódból kell visszafejteni."]];
+    ["jt:jart","Jeltörő","../Jel-toro/","Egy lehallgatóállomás, ahol a szavakat kódból kell visszafejteni."],
+    ["ku:jart","Kurta szimulátor","../Kurta-SIM-/","Böff-ent-ett-ünk: Kurta egyetlen szót tud toldalékolni, de azt 440 dB-lel."]];
   function vilagok(){var n=univ.get(),j=VILAGOK.filter(function(v){return n[v[0]]});var sec=document.getElementById("vilagSec");if(!j.length){sec.hidden=true;return}sec.hidden=false;
     document.getElementById("vilagok").innerHTML=j.map(function(v){return '<p class="note"><b>'+v[1]+'.</b> '+v[3]+'</p>'}).join("")+j.map(function(v){return '<a href="'+v[2]+'">'+v[1]+' ↗</a>'}).join("")}
   vilagok();
