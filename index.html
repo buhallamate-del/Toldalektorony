@@ -1,0 +1,412 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Toldaléktorony</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Az atlasz közös arca (Harmónia). Elrendezés: a szó egy torony, a tő a földszint, fölötte a jelek, a rag a tető; a toronyból balról jobbra olvasva lesz szó. */
+:root{
+  --bg:#F6F1E9; --surface:#FFFDF8; --line:#E2D8C8; --fg:#2A231C; --muted:#6E6253;
+  --accent:#B5452B; --accent-soft:#F3DDD3; --hub:#2A231C; --hub-fg:#F6F1E9;
+  --num:#8F6118; --num-soft:#F2E5C9; --poss:#2B6964; --poss-soft:#D5E8E5;
+  --ok:#3F6B3A; --ok-soft:#E1EBDA;
+  --font-display:"Young Serif",Georgia,serif;
+  --font-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --font-data:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#18140F; --surface:#221C16; --line:#3A3127; --fg:#F0E7DA; --muted:#B3A592;
+  --accent:#E77F60; --accent-soft:#3B2219; --hub:#F0E7DA; --hub-fg:#18140F;
+  --num:#E0B460; --num-soft:#33281A; --poss:#86C7BF; --poss-soft:#16302D;
+  --ok:#9CC98F; --ok-soft:#1F2A1C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#18140F; --surface:#221C16; --line:#3A3127; --fg:#F0E7DA; --muted:#B3A592;
+  --accent:#E77F60; --accent-soft:#3B2219; --hub:#F0E7DA; --hub-fg:#18140F;
+  --num:#E0B460; --num-soft:#33281A; --poss:#86C7BF; --poss-soft:#16302D;
+  --ok:#9CC98F; --ok-soft:#1F2A1C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:17px;line-height:1.5}
+.wrap{max-width:660px;margin:0 auto;padding-inline:16px;padding-block:24px 56px;display:flex;flex-direction:column;gap:34px}
+.eyebrow{font:500 12px var(--font-data);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+h1{font:400 clamp(38px,9vw,58px)/1.02 var(--font-display);margin:6px 0 10px;text-wrap:balance}
+h2{font:400 clamp(24px,5.5vw,30px)/1.15 var(--font-display);margin:0 0 6px;text-wrap:balance}
+.lede{color:var(--muted);margin:0;max-width:56ch}
+.sub{color:var(--muted);margin:0 0 14px;max-width:56ch;font-size:16px}
+section{display:flex;flex-direction:column}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 18px 20px;min-width:0}
+a{color:var(--accent);text-underline-offset:3px}
+
+/* Torony */
+.tower{display:flex;flex-direction:column;gap:5px;margin:4px 0}
+.fl{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;gap:10px}
+.lbl{font:500 10px/1.25 var(--font-data);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right}
+.slot{display:flex;justify-content:center;min-width:0}
+.blk{height:44px;display:flex;align-items:center;justify-content:center;border-radius:5px;font:400 23px/1 var(--font-display);border:1.5px solid transparent;white-space:nowrap}
+.blk.stem{width:100%;background:var(--hub);color:var(--hub-fg)}
+.blk.der{width:90%;background:var(--surface);border-color:var(--muted);color:var(--fg);height:34px;font-size:19px}
+.blk.num{width:80%;background:var(--num-soft);border-color:var(--num);color:var(--num)}
+.blk.poss{width:68%;background:var(--poss-soft);border-color:var(--poss);color:var(--poss)}
+.blk.case{width:60%;background:var(--accent);color:var(--surface);border:0;border-radius:0;clip-path:polygon(16% 0,84% 0,100% 100%,0 100%)}
+.blk.pre{width:100%;background:transparent;border:1.5px dashed var(--fg);color:var(--fg)}
+.blk.empty{background:transparent;border:1.5px dashed var(--line);color:var(--muted);font:500 11px var(--font-data);letter-spacing:.08em;text-transform:uppercase;clip-path:none;border-radius:5px}
+.blk .lk{opacity:.5}
+.ground{border-top:2px solid var(--fg);margin:2px 0 2px 88px}
+.drop{animation:drop .3s ease-out}
+@keyframes drop{from{transform:translateY(-14px)}to{transform:none}}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* Szó a torony alatt */
+.wordline{font:400 clamp(28px,8vw,44px)/1.25 var(--font-display);text-align:center;overflow-wrap:anywhere;margin:16px 0 2px;min-height:1.25em}
+.wordline > span{border-bottom:4px solid var(--line);padding-bottom:1px}
+.wordline .s-stem{border-color:var(--fg)}
+.wordline .s-der{border-color:var(--muted)}
+.wordline .s-pre{border-bottom-style:dashed;border-color:var(--fg)}
+.wordline .s-num{color:var(--num);border-color:var(--num)}
+.wordline .s-poss{color:var(--poss);border-color:var(--poss)}
+.wordline .s-case{color:var(--accent);border-color:var(--accent)}
+.wordline .lk{opacity:.5}
+
+/* Tippelj */
+.prompt{font:400 20px/1.35 var(--font-display);text-align:center;margin:0 0 14px;text-wrap:balance}
+.bricks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 4px}
+.brick{font:400 22px/1 var(--font-display);padding:9px 16px;border-radius:6px;border:1.5px solid;cursor:pointer;background:var(--surface);color:var(--fg)}
+.brick.stem{background:var(--hub);color:var(--hub-fg);border-color:var(--hub)}
+.brick.num{background:var(--num-soft);color:var(--num);border-color:var(--num)}
+.brick.poss{background:var(--poss-soft);color:var(--poss);border-color:var(--poss)}
+.brick.case{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.brick:disabled{opacity:.18;cursor:default}
+.feedback{margin:12px 0 0;min-height:3em;text-align:center}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.btn{font:600 16px var(--font-body);padding:9px 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--hub);color:var(--hub-fg);border-color:var(--hub)}
+.score{font:500 12px var(--font-data);color:var(--muted);text-align:center;margin-top:10px;letter-spacing:.06em;font-variant-numeric:tabular-nums}
+
+/* A gép */
+.ctls{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl-l{font:500 12px var(--font-data);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{font:600 15px var(--font-body);padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;display:inline-flex;gap:6px;align-items:baseline}
+.opt small{font:500 10px var(--font-data);opacity:.75}
+.opt:hover{color:var(--fg);border-color:var(--fg)}
+.opt[aria-pressed="true"]{background:var(--hub);color:var(--hub-fg);border-color:var(--hub)}
+.explain{margin:12px 0 0;font-size:16px;max-width:58ch}
+.mirror{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.mirror .k{font:500 11px var(--font-data);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mrow{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.mc{font:600 15px var(--font-body);padding:2px 10px;border-radius:999px;border:1.5px solid var(--line);color:var(--fg)}
+.mc.stem{background:var(--hub);color:var(--hub-fg);border-color:var(--hub)}
+.mc.num{background:var(--num-soft);color:var(--num);border-color:var(--num)}
+.mc.poss{background:var(--poss-soft);color:var(--poss);border-color:var(--poss)}
+.mc.case{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.mc.zero{opacity:.55}
+.note{font-size:14px;color:var(--muted);margin:12px 0 0}
+
+/* Kivételek */
+.exc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.ex{all:unset;box-sizing:border-box;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+button.ex{cursor:pointer}
+button.ex:hover{border-color:var(--fg)}
+.ex:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ex .w{font:400 24px var(--font-display);overflow-wrap:anywhere}
+.ex .w em{font-style:normal;color:var(--accent)}
+.ex p{margin:0;font-size:15px;color:var(--muted)}
+.ex .go{font:500 11px var(--font-data);letter-spacing:.08em;text-transform:uppercase;color:var(--fg);margin-top:4px}
+.ex .go.off{color:var(--muted)}
+.longword{font-size:clamp(17px,4.6vw,24px)}
+.aside{font-size:16px;color:var(--muted);max-width:58ch;margin:0}
+.aside b{color:var(--fg)}
+footer{font:500 12px var(--font-data);color:var(--muted);letter-spacing:.06em;border-top:1px solid var(--line);padding-top:14px}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.drop,.shake{animation:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">A magyar nyelv gépezete · 2. darab</div>
+    <h1>Toldaléktorony</h1>
+    <p class="lede">Egy magyar szó végén három-négy toldalék is állhat egymás után: <i>házaimban</i>. A sorrendjük kötött, mégsem tanulja meg senki szabályként. Előbb építs, aztán nézd meg, milyen emeletekből áll a torony.</p>
+  </header>
+
+  <section aria-labelledby="h-quiz">
+    <h2 id="h-quiz">Építsd fel</h2>
+    <p class="sub">Koppints a darabokra alulról fölfelé, a tővel kezdve. Minden körben van egy darab, amelyik nem illik a toronyba.</p>
+    <div class="card">
+      <p class="prompt" id="qprompt"></p>
+      <div class="tower" id="qtower" aria-hidden="true"></div>
+      <div class="wordline" id="qword" aria-live="polite"></div>
+      <div class="bricks" id="qbricks"></div>
+      <p class="feedback" id="qfb" aria-live="polite"></p>
+      <div class="row"><button class="btn primary" type="button" id="qnext">Következő szó</button></div>
+      <div class="score" id="qscore"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-machine" id="gep">
+    <h2 id="h-machine">A gép</h2>
+    <p class="sub">Válaszd ki, mit akarsz mondani. A gép minden darabot a saját emeletére tesz, és kiszámolja az alakját. Bármilyen sorrendben kattintasz, a torony mindig ugyanígy áll.</p>
+    <div class="card">
+      <div class="ctls" id="ctls"></div>
+      <div class="tower" id="mtower" aria-hidden="true"></div>
+      <div class="wordline" id="mword" aria-live="polite"></div>
+      <p class="explain" id="mexplain"></p>
+      <div class="mirror">
+        <span class="k">magyarul</span><div class="mrow" id="mhu"></div>
+        <span class="k">angolul</span><div class="mrow" id="men"></div>
+      </div>
+      <p class="note">Hogy <i>-ban</i> vagy <i>-ben</i>, azt a <a href="https://claude.ai/artifact/9eTN1FtHZpKQdgjjg5AXBb" target="_blank" rel="noopener">Harmónia</a> gépe dönti el. Itt a sorrend a kérdés.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-exc">
+    <h2 id="h-exc">Ahol a torony megbillen</h2>
+    <p class="sub">Koppints a kártyára. Ahol lehet, a gép megmutatja.</p>
+    <div class="exc">
+      <button class="ex" type="button" data-set="kéz,1,0,ban"><span class="w">kéz → <em>kezemben</em></span><p>A földszint is megmozdul. A kéz hosszú é-je megrövidül, ha magánhangzó jön utána: kezem, kezek, kezet. A kézben, kézzel alakban viszont hosszú marad. Így viselkedik a víz és a tűz is: vizet, tüzet.</p><span class="go">Nézd meg a gépben</span></button>
+      <button class="ex" type="button" data-set="ház,2,2,"><span class="w">ház → <em>házai</em></span><p>Üresnek látszó emelet. A házai egyszerre mondja, hogy több ház van, és hogy az övé, de a kié? emeleten nem áll külön betű. A nyelvtanok ezt többféleképpen magyarázzák. A beszélő sosem érzi, hogy hiányozna valami.</p><span class="go">Nézd meg a gépben</span></button>
+      <button class="ex" type="button" data-set="ház,1,-1,val"><span class="w">ház → <em>házzal</em></span><p>A tető beleolvad. A -val v-je felveszi az előtte álló mássalhangzót: ház-zal, könyv-vel, házunk-kal. A rag ilyenkor hozzánő az alatta lévő emelethez.</p><span class="go">Nézd meg a gépben</span></button>
+      <div class="ex"><span class="w">barát → <em>barátoméban</em></span><p>Torony a tornyon. A -é (valakié) az egész kész szót új alappá teszi: barát-om-é, vagyis a barátomé. Erre jöhet új tető: a barátoméban, a barátom házában, kocsijában, bármiben. A dolog neve el is maradhat.</p><span class="go off">Ezt a gép nem építi</span></div>
+      <div class="ex"><span class="w">al → <em>alulról</em></span><p>Két tető egymáson? Az alul végén álló -ul egykor rag volt, akárcsak a belül és a kívül végén. Régen összenőtt a tővel, és egy anyanyelvi fül ma az alult önálló szónak hallja. Ezért kaphat új tetőt: alulról, belülről, kívülről.</p><span class="go off">Ezt a gép nem építi</span></div>
+      <div class="ex"><span class="w">Kovács → <em>Kovácséknál</em></span><p>Harmadik többes szám. A -k sok ugyanolyat jelent, az -i- sok valakiét, az -ék pedig egy családot vagy társaságot: Kovácsék, vagyis Kovács és a családja. Erre is jöhet tető: Kovácséknál, Kovácsékkal.</p><span class="go off">Ezt a gép nem építi</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-long">
+    <h2 id="h-long">A leghosszabb torony</h2>
+    <p class="sub">A híres szóban tizennégy darab áll egymáson. Két dolog látszik itt, ami a gépben nem: az igekötő a tő elé kerül, mint egy pince, a tő és a jelek közé pedig képzők rakódnak, és mindegyik új szót csinál az előzőből.</p>
+    <div class="card">
+      <div class="tower" id="ltower" aria-hidden="true"></div>
+      <div class="wordline longword" id="lword"></div>
+      <p class="note">Jelentése nagyjából: a ti olyan viselkedésetekért, amellyel újra meg újra megszentségteleníthetetlennek mutatjátok magatokat. A képzőkről a sorozat Szócsalád-fa darabja szól majd.</p>
+    </div>
+  </section>
+
+  <p class="aside"><b>Ami engem ebben lenyűgöz:</b> a gépben az angol sor szinte a magyar tükörképe. <i>In my houses</i>: viszony, gazda, dolog, szám. <i>Házaimban</i>: dolog, szám, gazda, viszony. Csak a ház és a többes szám áll mindkettőben ugyanúgy, mert az angol is toldalékkal jelöli a többet. A magyar belülről kifelé építkezik: a tő a mag, és minden réteg egy kicsit tágabb kört rajzol köré. Egy anyanyelvi beszélő soha nem számolt emeleteket, mégsem mondaná senki, hogy házmaiban.</p>
+
+  <footer>A magyar nyelv gépezete · atlasz · 2/12</footer>
+</div>
+
+<script>
+(function(){
+  var V="aáeéiíoóöőuúüű";
+  var LABEL={pre:"pince · igekötő",stem:"földszint · tő",der:"képző",num:"hány?",poss:"kié?","case":"tető · rag"};
+  function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+
+  /* floors: lentről fölfelé; a DOM-ba fordítva kerül */
+  function renderTower(box,floors,dropKey){
+    box.textContent="";
+    for(var i=floors.length-1;i>=0;i--){
+      var fl=floors[i];
+      var row=el("div","fl");
+      row.appendChild(el("span","lbl",fl.label||LABEL[fl.f]));
+      var slot=el("div","slot");
+      var b=el("div","blk "+fl.f+(fl.empty?" empty":"")+(dropKey!=null&&dropKey===i?" drop":""));
+      if(fl.empty){b.textContent=fl.emptyTxt||"?"}
+      else{if(fl.lk)b.appendChild(el("span","lk",fl.lk));b.appendChild(document.createTextNode(fl.t===""?"∅":fl.t))}
+      slot.appendChild(b);row.appendChild(slot);box.appendChild(row);
+      if(fl.f==="stem")box.appendChild(el("div","ground"));
+    }
+  }
+  function renderWord(box,segs){
+    box.textContent="";
+    segs.forEach(function(s){
+      if(s.empty||(!s.t&&!s.lk))return;
+      var sp=el("span","s-"+s.f);
+      if(s.lk)sp.appendChild(el("span","lk",s.lk));
+      sp.appendChild(document.createTextNode(s.t||""));
+      box.appendChild(sp);
+    });
+  }
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+
+  /* ---------- Építsd fel ---------- */
+  var Q=[
+    {p:"Több ház, mind az enyém, és benne vagyok.",parts:[["ház","stem"],["ai","num"],["m","poss"],["ban","case"]],
+     decoys:[["ak","num","A -k itt nem fér be. Ha a háznak gazdája van, a többes szám jele -i- lesz: ház-ai-m."]]},
+    {p:"Sok könyv, senkié, és róluk beszélünk.",parts:[["könyv","stem"],["ek","num"],["ről","case"]],
+     decoys:[["ei","num","A könyvei azt jelentené, hogy valakié. Itt nincs gazda, ezért elég a -k."]]},
+    {p:"Több kert, a miénk, és bennük ülünk.",parts:[["kert","stem"],["jei","num"],["nk","poss"],["ben","case"]],
+     decoys:[["ek","num","A kertek gazda nélküli alak. Ha a miénk, a -k helyett -i- kell: kert-jei-nk."]]},
+    {p:"Több alma, a tiétek, és kiveszek belőlük.",parts:[["almá","stem"],["i","num"],["tok","poss"],["ból","case"]],
+     decoys:[["k","num","Az almák még senkié. Ha a tiétek, a -k helyére -i- lép: almá-i-tok."]]},
+    {p:"Több zemlő (ilyen szó nincs), a tiéd, és van bennük valami.",parts:[["zemlő","stem"],["i","num"],["d","poss"],["ben","case"]],
+     decoys:[["k","num","Kitalált szónál is ugyanígy megy: ha a tiéd, a többes szám -i-, nem -k."]],
+     done:"Egy nem létező szón is pontosan tudtad, hová kerül a gazda és a tető. A sorrend nem a szótól függ."},
+    {p:"Több kéz, a tiétek, és csináltok velük valamit.",parts:[["kez","stem"],["ei","num"],["tek","poss"],["kel","case"]],
+     decoys:[["vel","case","A -vel itt nem marad -vel: a v felveszi az előtte álló k-t. Ezért kezeitekkel."]]}
+  ];
+  var qi=0,pos=0,finished=false,built=0,miss=0,pieces=[];
+  var qprompt=document.getElementById("qprompt"),qtower=document.getElementById("qtower"),qword=document.getElementById("qword"),
+      qbricks=document.getElementById("qbricks"),qfb=document.getElementById("qfb"),qscore=document.getElementById("qscore");
+  var DEF="Kezdd a tővel, és haladj fölfelé.";
+  function qFloors(){var it=Q[qi];return it.parts.map(function(p,i){return i<pos?{f:p[1],t:p[0]}:{f:p[1],empty:true,emptyTxt:"?"}})}
+  function qRender(drop){
+    renderTower(qtower,qFloors(),drop);
+    renderWord(qword,Q[qi].parts.slice(0,pos).map(function(p){return {f:p[1],t:p[0]}}));
+    qscore.textContent="kész szó: "+built+" / "+Q.length+" · hibás koppintás: "+miss;
+  }
+  function showQ(){
+    var it=Q[qi];pos=0;finished=false;
+    qprompt.textContent=it.p;qfb.textContent=DEF;
+    pieces=shuffle(it.parts.map(function(p,i){return {t:p[0],f:p[1],i:i}}).concat(it.decoys.map(function(d){return {t:d[0],f:d[1],decoy:true,why:d[2]}})));
+    qbricks.textContent="";
+    pieces.forEach(function(pc){
+      var b=el("button","brick "+pc.f,pc.t);b.type="button";
+      b.addEventListener("click",function(){tap(pc,b)});
+      qbricks.appendChild(b);
+    });
+    qRender();
+  }
+  function reason(pc,exp){
+    if(exp.f==="stem")return "Minden a tővel kezdődik. Ez az alap, erre épül a többi.";
+    if(pc.f==="case")return "A rag a tető. Előbb fel kell húzni alatta az emeleteket.";
+    if(pc.f==="poss"&&exp.f==="num")return "Előbb a szám jön (hány?), csak utána a gazda (kié?). Ezért ház-ai-m, és nem ház-m-ai.";
+    return "Ennek a darabnak feljebb van a helye.";
+  }
+  function bump(b){b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake")}
+  function tap(pc,b){
+    if(finished)return;
+    var it=Q[qi],exp={t:it.parts[pos][0],f:it.parts[pos][1]};
+    if(pc.decoy){miss++;qfb.textContent=pc.why;bump(b);qRender();return}
+    if(pc.i!==pos){miss++;qfb.textContent=reason(pc,exp);bump(b);qRender();return}
+    b.disabled=true;pos++;
+    if(pos===it.parts.length){
+      finished=true;built++;
+      [].forEach.call(qbricks.children,function(x){x.disabled=true});
+      var w=it.parts.map(function(p){return p[0]}).join("");
+      qfb.textContent="Kész: "+w+". "+(it.done||"Alap, "+(it.parts.length===4?"szám, gazda, tető.":"szám, tető. Gazda nélkül egy emelet kimarad, de a sorrend ugyanaz."));
+    } else qfb.textContent="Jó. Mi jön a következő emeletre?";
+    qRender(pos-1);
+  }
+  document.getElementById("qnext").addEventListener("click",function(){qi=(qi+1)%Q.length;showQ()});
+  showQ();
+
+  /* ---------- A gép ---------- */
+  var ST={
+    "ház":{c:"b",base:"ház",bd:"ház",pl:["a","k"],sg:[["a","m"],["a","d"],["","a"],["","unk"],["a","tok"],["","uk"]],pp:["a","i"],en:"house"},
+    "kert":{c:"f",base:"kert",bd:"kert",pl:["e","k"],sg:[["e","m"],["e","d"],["","je"],["","ünk"],["e","tek"],["","jük"]],pp:["je","i"],en:"garden"},
+    "kéz":{c:"f",base:"kéz",bd:"kez",pl:["e","k"],sg:[["e","m"],["e","d"],["","e"],["","ünk"],["e","tek"],["","ük"]],pp:["e","i"],en:"hand"},
+    "alma":{c:"b",base:"alma",bd:"almá",pl:["","k"],sg:[["","m"],["","d"],["","ja"],["","nk"],["","tok"],["","juk"]],pp:["","i"],en:"apple"},
+    "könyv":{c:"f",base:"könyv",bd:"könyv",pl:["e","k"],sg:[["e","m"],["e","d"],["","e"],["","ünk"],["e","tek"],["","ük"]],pp:["e","i"],en:"book"}
+  };
+  var PPL={b:["m","d","","nk","tok","k"],f:["m","d","","nk","tek","k"]};
+  var PERS=["enyém","tiéd","övé","miénk","tiétek","övék"],EN_P=["my","your","his/her","our","your","their"];
+  var CASES=[["","nincs",""],["ban","benne","-ban"],["ba","bele","-ba"],["ból","belőle","-ból"],["on","rajta","-on"],["hoz","hozzá","-hoz"],["val","vele","-val"],["t","tárgy","-t"],["nak","neki","-nak"]];
+  var EN_C={ban:"in",ba:"into","ból":"out of",on:"on",hoz:"to",val:"with",t:"∅",nak:"for"};
+  var S={stem:"ház",n:2,p:0,c:"ban"},prev=null;
+
+  function full(s){return (s.lk||"")+(s.t||"")}
+  function attach(segs,cls,c){
+    if(segs.length===1&&segs[0].t==="kéz"&&c==="t"){segs[0].t="kez";return {f:"case",t:"et"}}
+    var last=segs[segs.length-1],w=segs.map(full).join(""),L=w.slice(-1),len=false;
+    if(L==="a"||L==="e"){var r=L==="a"?"á":"é";last.t=last.t.slice(0,-1)+r;w=w.slice(0,-1)+r;L=r;len=true}
+    var vf=V.indexOf(L)>-1,back=cls==="b",lv="";
+    for(var i=w.length-1;i>=0;i--){if(V.indexOf(w[i])>-1){lv=w[i];break}}
+    var rnd="öőüű".indexOf(lv)>-1,t;
+    switch(c){
+      case "ban":t=back?"ban":"ben";break;
+      case "ba":t=back?"ba":"be";break;
+      case "ból":t=back?"ból":"ből";break;
+      case "nak":t=back?"nak":"nek";break;
+      case "hoz":t=back?"hoz":(rnd?"höz":"hez");break;
+      case "on":t=vf?"n":(back?"on":(rnd?"ön":"en"));break;
+      case "t":t=vf?"t":(back?"at":"et");break;
+      case "val":t=vf?(back?"val":"vel"):L+(back?"al":"el");break;
+    }
+    return {f:"case",t:t,len:len,assim:c==="val"&&!vf,dbl:L};
+  }
+  function build(){
+    var st=ST[S.stem],suffixed=S.n===2||S.p>=0;
+    var stem={f:"stem",t:suffixed?st.bd:st.base},num=null,poss=null;
+    if(S.n===2&&S.p<0)num={f:"num",lk:st.pl[0],t:st.pl[1]};
+    if(S.n===1&&S.p>=0)poss={f:"poss",lk:st.sg[S.p][0],t:st.sg[S.p][1]};
+    if(S.n===2&&S.p>=0){num={f:"num",lk:st.pp[0],t:st.pp[1]};poss={f:"poss",t:PPL[st.c][S.p],zero:S.p===2}}
+    var segs=[stem];if(num)segs.push(num);if(poss&&!poss.zero)segs.push(poss);
+    var cs=S.c?attach(segs,st.c,S.c):null;
+    return {st:st,stem:stem,num:num,poss:poss,cs:cs,segs:segs};
+  }
+  function explain(r){
+    var out=[],w=r.segs.map(full).join("")+(r.cs?r.cs.t:"");
+    if(S.n===2&&S.p>=0)out.push("Gazdája is van, ezért a többes szám jele nem -k, hanem -i-.");
+    else if(S.n===2)out.push("Nincs gazdája, ezért a többes szám jele -k.");
+    if(r.poss&&r.poss.zero)out.push("A kié? emeleten nem áll külön betű: az -i- előtti rész egyszerre mondja, hogy több és hogy az övé.");
+    if(S.stem==="kéz"&&r.stem.t==="kez")out.push("A kéz é-je megrövidül, ha magánhangzó jön utána: kez-.");
+    if(S.stem==="alma"&&(S.n===2||S.p>=0||S.c))out.push("Az alma végi a megnyúlik, amikor toldalék kerül rá.");
+    else if(r.cs&&r.cs.len)out.push("A szó végi magánhangzó megnyúlik, mielőtt a tető rákerül.");
+    if(r.cs&&r.cs.assim)out.push("A -val v-je felveszi az előtte álló "+r.cs.dbl+" hangot, ezért "+r.cs.t+".");
+    out.push(S.c?"A rag a tető: utána már nem jöhet semmi.":"Nincs tető: a szó még kaphat ragot.");
+    return w.charAt(0).toUpperCase()+w.slice(1)+". "+out.join(" ");
+  }
+  function chip(box,f,txt,zero){var c=el("span","mc "+f+(zero?" zero":""),txt);box.appendChild(c)}
+  var mtower=document.getElementById("mtower"),mword=document.getElementById("mword"),mexp=document.getElementById("mexplain"),
+      mhu=document.getElementById("mhu"),men=document.getElementById("men");
+  function renderMachine(changed){
+    var r=build();
+    var floors=[
+      {f:"stem",t:r.stem.t},
+      r.num?{f:"num",lk:r.num.lk,t:r.num.t}:{f:"num",empty:true,emptyTxt:"egy · nincs jel"},
+      r.poss?{f:"poss",lk:r.poss.lk||"",t:r.poss.zero?"":r.poss.t}:{f:"poss",empty:true,emptyTxt:"senkié"},
+      r.cs?{f:"case",t:r.cs.t}:{f:"case",empty:true,emptyTxt:"nincs tető"}
+    ];
+    var drop={stem:0,n:1,p:2,c:3}[changed];
+    renderTower(mtower,floors,drop);
+    var ws=r.segs.slice();if(r.cs)ws.push(r.cs);
+    renderWord(mword,ws);
+    mexp.textContent=explain(r);
+    mhu.textContent="";men.textContent="";
+    chip(mhu,"stem",r.stem.t);
+    if(r.num)chip(mhu,"num",full(r.num));
+    if(r.poss)chip(mhu,"poss",r.poss.zero?"∅":full(r.poss),r.poss.zero);
+    if(r.cs)chip(mhu,"case",r.cs.t);
+    if(S.c)chip(men,"case",EN_C[S.c],S.c==="t");
+    if(S.p>=0)chip(men,"poss",EN_P[S.p]);
+    chip(men,"stem",r.st.en);
+    if(S.n===2)chip(men,"num","s");
+  }
+  /* vezérlők */
+  var ctls=document.getElementById("ctls"),groups={};
+  function group(key,label,items){
+    var g=el("div","ctl");g.appendChild(el("span","ctl-l",label));
+    var o=el("div","opts");o.setAttribute("role","group");o.setAttribute("aria-label",label);
+    items.forEach(function(it){
+      var b=el("button","opt");b.type="button";b.setAttribute("data-v",String(it[0]));
+      b.appendChild(document.createTextNode(it[1]));if(it[2])b.appendChild(el("small",null,it[2]));
+      b.addEventListener("click",function(){S[key]=key==="stem"||key==="c"?it[0]:Number(it[0]);sync();renderMachine(key)});
+      o.appendChild(b);
+    });
+    g.appendChild(o);ctls.appendChild(g);groups[key]=o;
+  }
+  group("stem","tő",Object.keys(ST).map(function(k){return [k,k]}));
+  group("n","hány?",[[1,"egy"],[2,"több"]]);
+  group("p","kié?",[[-1,"senkié"]].concat(PERS.map(function(p,i){return [i,p]})));
+  group("c","tető",CASES);
+  function sync(){Object.keys(groups).forEach(function(k){[].forEach.call(groups[k].children,function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-v")===String(S[k])))})})}
+  sync();renderMachine();
+
+  [].forEach.call(document.querySelectorAll("button.ex[data-set]"),function(b){
+    b.addEventListener("click",function(){
+      var a=b.getAttribute("data-set").split(",");
+      S={stem:a[0],n:Number(a[1]),p:Number(a[2]),c:a[3]||""};sync();renderMachine("c");
+      document.getElementById("gep").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+    });
+  });
+
+  /* ---------- A leghosszabb torony ---------- */
+  var LONG=[{f:"pre",t:"meg"},{f:"stem",t:"szent"},{f:"der",t:"ség"},{f:"der",t:"telen"},{f:"der",t:"ít"},{f:"der",t:"het"},{f:"der",t:"etlen"},{f:"der",t:"ség"},{f:"der",t:"es"},{f:"der",t:"ked"},{f:"der",t:"és"},{f:"num",lk:"e",t:"i"},{f:"poss",t:"tek"},{f:"case",t:"ért"}];
+  var lt=document.getElementById("ltower");
+  (function(){
+    lt.textContent="";
+    for(var i=LONG.length-1;i>=0;i--){
+      var fl=LONG[i];
+      if(fl.f==="pre")lt.appendChild(el("div","ground"));
+      var row=el("div","fl");row.appendChild(el("span","lbl",LABEL[fl.f]));
+      var slot=el("div","slot"),b=el("div","blk "+fl.f);
+      if(fl.lk)b.appendChild(el("span","lk",fl.lk));b.appendChild(document.createTextNode(fl.t));
+      slot.appendChild(b);row.appendChild(slot);lt.appendChild(row);
+    }
+  })();
+  renderWord(document.getElementById("lword"),LONG);
+})();
+</script>
+
+</body></html>
