@@ -117,6 +117,11 @@ button.ex:hover{border-color:var(--fg)}
 .aside{font-size:16px;color:var(--muted);max-width:58ch;margin:0}
 .aside b{color:var(--fg)}
 footer{font:500 12px var(--font-data);color:var(--muted);letter-spacing:.06em;border-top:1px solid var(--line);padding-top:14px}
+.vtab{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}.vtab td,.vtab th{padding:5px 3px;border-bottom:1px solid var(--line);text-align:left}.vtab th{color:var(--muted);font-weight:600}.vtab tr.en td{font-weight:700;color:var(--hub)}.vtab td.sz{text-align:right;font-family:var(--font-data)}
+.fent{font-size:11px;padding:1px 6px;border-radius:8px;border:1px solid var(--line);margin-left:4px;color:var(--muted)}
+.futamfej{display:flex;justify-content:space-between;align-items:center;gap:10px;font:600 15px var(--font-data);margin-bottom:8px}
+.vilag a{display:inline-block;margin:6px 8px 0 0;padding:7px 12px;border-radius:999px;border:1.5px solid #7a5cff;color:#6a4cdf;text-decoration:none;font-weight:600}
+.nevsor{display:flex;gap:8px;margin-top:10px}.nevsor input{flex:1;min-width:0;font:inherit;padding:8px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg)}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.drop,.shake{animation:none}}
 </style>
@@ -139,6 +144,20 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       <p class="feedback" id="qfb" aria-live="polite"></p>
       <div class="row"><button class="btn primary" type="button" id="qnext">Következő szó</button></div>
       <div class="score" id="qscore"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-futam">
+    <h2 id="h-futam">Heti toronyfutam</h2>
+    <p class="sub">Kilencven másodperc, mindenkinek ugyanazok a szavak a héten. Minden hibátlanul felépített torony egy pont; ha egyszer is mellényúlsz, a szó nem számít. Hétfőn új futam indul.</p>
+    <div class="card" id="futam">
+      <div class="futamfej"><span id="fIdo">1:30</span><span id="fPont">0 pont</span></div>
+      <p class="prompt" id="fprompt">Készen állsz?</p>
+      <div class="tower" id="ftower" aria-hidden="true"></div>
+      <div class="wordline" id="fword" aria-live="polite"></div>
+      <div class="bricks" id="fbricks"></div>
+      <div class="row"><button class="btn primary" type="button" id="fstart">Futam indítása</button></div>
+      <div id="frang"></div>
     </div>
   </section>
 
@@ -182,6 +201,11 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   </section>
 
   <p class="aside"><b>Ami engem ebben lenyűgöz:</b> a gépben az angol sor szinte a magyar tükörképe. <i>In my houses</i>: viszony, gazda, dolog, szám. <i>Házaimban</i>: dolog, szám, gazda, viszony. Csak a ház és a többes szám áll mindkettőben ugyanúgy, mert az angol is toldalékkal jelöli a többet. A magyar belülről kifelé építkezik: a tő a mag, és minden réteg egy kicsit tágabb kört rajzol köré. Egy anyanyelvi beszélő soha nem számolt emeleteket, mégsem mondaná senki, hogy házmaiban.</p>
+
+  <section aria-labelledby="h-vilag" class="vilag" id="vilagSec" hidden>
+    <h2 id="h-vilag">Más világok</h2>
+    <div class="card" id="vilagok"></div>
+  </section>
 
   <footer>A magyar nyelv gépezete · atlasz · 2/12</footer>
 </div>
@@ -406,6 +430,116 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     }
   })();
   renderWord(document.getElementById("lword"),LONG);
+
+  /* ---------- Multiverzum: közös napló a többi játékkal ---------- */
+  var UNIV_KEY="univerzum-naplo";
+  var univ={get:function(){try{return JSON.parse(localStorage.getItem(UNIV_KEY))||{}}catch(_){return {}}},has:function(k){return !!this.get()[k]},
+    set:function(k){var n=this.get();if(n[k])return false;n[k]=Date.now();try{localStorage.setItem(UNIV_KEY,JSON.stringify(n))}catch(_){}return true}};
+  univ.set("tt:jart");
+  function univBeagyazva(){try{return window.parent!==window&&window.parent.location.origin===location.origin}catch(_){return false}}
+  document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href*="Esemenyhorizont"]');if(a&&univBeagyazva()){e.preventDefault();window.parent.postMessage({type:"univ-vissza",from:"toldalektorony"},location.origin)}});
+  var kesz=new Set();
+  qbricks.addEventListener("click",function(){setTimeout(function(){if(finished){kesz.add(qi);univ.set("tt:elso");if(kesz.size===Q.length)univ.set("tt:mind")}},0)});
+  var VILAGOK=[["eh:jart","Eseményhorizont","../Esemenyhorizont/?from=toldalektorony","Egy hajó egy fekete lyuk körül – ahol a szavak is elnyúlnak, mint a fény."],
+    ["lo:jart","Kísérleti Lőtér","../Kiserleti_robbantas/","Rakéták 1957-ből. A visszaszámlálás is toldalékol: hátra-van-ból hátralevő."],
+    ["r3:jart","Raktár 3D","../raktar-3d/","Egy raktár, ahol minden tárhelykód egy kis torony: sor, állvány, szint, hely."],
+    ["eg:jart","Égtorony","../Egtorony/","A torony testvére: ott emeletenként nő az erő, itt emeletenként a jelentés."],
+    ["mo:jart","Mézország","../Mezorszag/","Kaptárak: kaptár-a-i-nk-ban. Négy emelet egy szóban."],
+    ["me:jart","Mélység","../Melyseg/","Lefelé: a Föld rétegei is egymásra épülnek, csak ott a tető van alul."],
+    ["jt:jart","Jeltörő","../Jel-toro/","Egy lehallgatóállomás, ahol a szavakat kódból kell visszafejteni."]];
+  function vilagok(){var n=univ.get(),j=VILAGOK.filter(function(v){return n[v[0]]});var sec=document.getElementById("vilagSec");if(!j.length){sec.hidden=true;return}sec.hidden=false;
+    document.getElementById("vilagok").innerHTML=j.map(function(v){return '<p class="note"><b>'+v[1]+'.</b> '+v[3]+'</p>'}).join("")+j.map(function(v){return '<a href="'+v[2]+'">'+v[1]+' ↗</a>'}).join("")}
+  vilagok();
+
+  /* ---------- Heti toronyfutam: generált szavak a gépből, mindenkinek ugyanaz a sorrend ---------- */
+// ---- Multiverzum-bajnokság: heti rangsor más játékosokkal ----
+// Egy nyilvános MQTT üzenetközvetítőn (HiveMQ, mint a Raktár 3D-ben és a Lőtér Űrversenyében) megy át a játékosok
+// neve és heti eredménye; saját szerver nincs. Témák (VS_CS/...):
+//   <játék>/<hét>/<azonosító>  – megőrzött heti eredmény: {id, nev, v:{...}, ts}
+//   jelen/<játék>/<azonosító>  – megőrzött jelenlét (a kapcsolat megszakadásakor a szerver törli)
+//   <játék>/e                  – élő hírek: {id, nev, t}
+// Hétfőn új hét, új rangsor; az előző hét győztese (ha legalább ketten versenyeztek) egyszeri jutalmat kap.
+const VS_BROKER='wss://broker.hivemq.com:8884/mqtt',VS_CS='multiverzum-bajnoksag-r4w8';
+function vsHet(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);
+  const e=t.getUTCFullYear();return e+'-W'+String(Math.ceil(((t-Date.UTC(e,0,1))/864e5+1)/7)).padStart(2,'0')}
+function inditVerseny({jatek,ertek,rendez,jutalom,valtozott}){
+  const id=(()=>{let i;try{i=localStorage.getItem('multiverzum-id')}catch(e){}if(!i){i=Math.random().toString(36).slice(2,10);try{localStorage.setItem('multiverzum-id',i)}catch(e){}}return i})();
+  const V={be:false,het:vsHet(),lap:{},elozo:{},jelen:{},hirek:[],k:null,kuld:'',uz:'Kapcsolódás…',id};
+  V.elozoHet=vsHet(new Date(Date.now()-7*864e5));
+  V.nev=()=>{try{return localStorage.getItem('multiverzum-nev')||''}catch(e){return ''}};
+  V.nevBe=n=>{n=String(n||'').trim().slice(0,24);try{localStorage.setItem('multiverzum-nev',n)}catch(e){}V.kuld='';V.kozol();jelenKuld()};
+  const tiszta=o=>o&&typeof o.id==='string'&&o.v&&typeof o.v==='object'?{id:o.id,nev:String(o.nev||'?').slice(0,24),v:o.v,ts:+o.ts||0}:null;
+  V.rangsor=(L=V.lap,sajat=true)=>{const l={...L};if(sajat){const v=ertek();if(v)l[id]={id,nev:V.nev()||'Névtelen',v,ts:Date.now()}}
+    return Object.values(l).filter(Boolean).map(x=>({...x,en:x.id===id})).filter(x=>x.en||Object.values(x.v).some(v=>+v>0)).sort((a,b)=>rendez(a.v,b.v))};
+  const jt=()=>VS_CS+'/jelen/'+jatek+'/'+id;
+  function jelenKuld(){if(V.be)V.k.publish(jt(),JSON.stringify({nev:V.nev()||'Névtelen'}),{qos:0,retain:true})}
+  V.kozol=()=>{if(!V.be||!V.nev())return;const v=ertek();if(!v)return;const s=JSON.stringify(v);if(s===V.kuld)return;V.kuld=s;
+    V.k.publish(VS_CS+'/'+jatek+'/'+V.het+'/'+id,JSON.stringify({id,nev:V.nev(),v,ts:Date.now()}),{qos:0,retain:true})};
+  V.hir=t=>{if(V.be&&V.nev())V.k.publish(VS_CS+'/'+jatek+'/e',JSON.stringify({id,nev:V.nev(),t:String(t).slice(0,140)}),{qos:0})};
+  V.fent=()=>Object.keys(V.jelen).length;
+  // az előző hét győztese: egyszer, ha mi voltunk az elsők (és nem egyedül)
+  let bajnokNezve=false;
+  function bajnokCsekk(){if(bajnokNezve)return;const R=V.rangsor(V.elozo,false);if(R.length<2||R[0].id!==id)return;bajnokNezve=true;
+    let n={};try{n=JSON.parse(localStorage.getItem('univerzum-naplo'))||{}}catch(e){}const k=jatek+':bajnok:'+V.elozoHet;if(n[k])return;
+    n[k]=Date.now();try{localStorage.setItem('univerzum-naplo',JSON.stringify(n))}catch(e){}jutalom(V.elozoHet,R.length)}
+  (async()=>{let mqtt;try{const mod=await import('./vendor/mqtt/mqtt.esm.js');mqtt=mod.default?.connect?mod.default:mod.default?.default??mod}catch(e){V.uz='A versenyhez nem sikerült betölteni a hálózati könyvtárat.';valtozott();return}
+    V.k=mqtt.connect(VS_BROKER,{clientId:jatek+'_'+id+'_'+Math.random().toString(36).slice(2,6),clean:true,keepalive:30,reconnectPeriod:5000,connectTimeout:10000,will:{topic:jt(),payload:'',qos:0,retain:true}});
+    V.k.on('connect',()=>{V.be=true;V.uz='';V.het=vsHet();V.k.subscribe(VS_CS+'/'+jatek+'/'+V.het+'/+');V.k.subscribe(VS_CS+'/'+jatek+'/'+V.elozoHet+'/+');
+      V.k.subscribe(VS_CS+'/jelen/'+jatek+'/+');V.k.subscribe(VS_CS+'/'+jatek+'/e');jelenKuld();V.kuld='';V.kozol();valtozott();setTimeout(bajnokCsekk,4000)});
+    V.k.on('close',()=>{if(V.be){V.be=false;V.uz='A kapcsolat megszakadt, újrapróbálom…';valtozott()}});
+    V.k.on('error',e=>console.warn('[verseny]',e?.message||e));
+    V.k.on('message',(tema,adat)=>{const r=tema.slice(VS_CS.length+1).split('/');let o=null;try{const s=adat.toString();o=s?JSON.parse(s):null}catch(e){return}
+      if(r[0]==='jelen'){if(r[2]===id)return;if(o)V.jelen[r[2]]=String(o.nev||'?').slice(0,24);else delete V.jelen[r[2]]}
+      else if(r[1]==='e'){if(!o||o.id===id)return;V.hirek.unshift({nev:String(o.nev||'?').slice(0,24),t:String(o.t||'').slice(0,140),ido:Date.now()});V.hirek.length=Math.min(V.hirek.length,6);valtozott(V.hirek[0]);return}
+      else if(r[1]===V.het||r[1]===V.elozoHet){if(r[2]===id&&r[1]===V.het)return;const L=r[1]===V.het?V.lap:V.elozo;const x=tiszta(o);if(x&&x.id===r[2])L[r[2]]=x;else delete L[r[2]]}
+      valtozott()})})();
+  return V}
+
+  function rng(seed){var h=1779033703^seed.length;for(var i=0;i<seed.length;i++){h=Math.imul(h^seed.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+    return function(){h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return(h>>>0)/4294967296}}
+  var CSERE={ban:"ben",ben:"ban",ba:"be",be:"ba","ból":"ből","ből":"ból",nak:"nek",nek:"nak",hoz:"hez",hez:"hoz","höz":"hoz",on:"en",en:"on","ön":"on",n:"on",val:"vel",vel:"val",at:"et",et:"at",t:"ot"};
+  function futamSzavak(het){var r=rng("toldalek-"+het),tok=Object.keys(ST),ki=[];
+    for(var i=0;i<80;i++){var regi=S;S={stem:tok[Math.floor(r()*tok.length)],n:r()<.5?1:2,p:r()<.3?-1:Math.floor(r()*6),c:CASES[1+Math.floor(r()*(CASES.length-1))][0]};
+      if(S.n===1&&S.p<0)S.p=Math.floor(r()*6);
+      var b=build(),parts=b.segs.map(function(x){return [full(x),x.f]});if(b.cs)parts.push([b.cs.t,"case"]);
+      var cs=CASES.find(function(c){return c[0]===S.c});
+      var leiras=S.stem+" · "+(S.n===2?"több":"egy")+(S.p>=0?" · "+(/^[aáeéiíoóöőuúüű]/.test(PERS[S.p])?"az ":"a ")+PERS[S.p]:"")+" · "+cs[1];
+      var dec=b.cs&&CSERE[b.cs.t]?[CSERE[b.cs.t],"case"]:b.num?[b.num.t==="k"?"i":"k","num"]:["k","num"];
+      ki.push({p:leiras,parts:parts,dec:dec});S=regi}
+    return ki}
+  var fEl=function(id){return document.getElementById(id)};
+  var FT={on:false,szavak:null,i:0,pos:0,hiba:false,pont:0,db:0,veg:0,timer:null};
+  var VS_TAR="toldalektorony:verseny";
+  var vsAllas=(function(){try{return JSON.parse(localStorage.getItem(VS_TAR))||{}}catch(e){return {}}})();
+  function vsHeti(){var h=vsHet();if(vsAllas.het!==h){vsAllas={het:h,p:0,db:0};try{localStorage.setItem(VS_TAR,JSON.stringify(vsAllas))}catch(e){}}return vsAllas.p||vsAllas.db?{p:vsAllas.p,db:vsAllas.db}:null}
+  var VS=inditVerseny({jatek:"tt",ertek:vsHeti,rendez:function(a,b){return (+b.p||0)-(+a.p||0)||(+b.db||0)-(+a.db||0)},
+    jutalom:function(het,db){univ.set("tt:bajnok");fEl("fprompt").textContent="🏆 A múlt heti toronyfutamot te nyerted ("+db+" építő közül)! Tornyod mostantól aranyszegélyes.";document.documentElement.style.setProperty("--hub","#c9971c")},
+    valtozott:function(h){if(!FT.on&&!(document.activeElement&&document.activeElement.id==="vsNev"))rangRajz()}});
+  window.toldalektorony={VS:VS,FT:FT};
+  if(univ.has("tt:bajnok:"+VS.elozoHet))document.documentElement.style.setProperty("--hub","#c9971c");
+  function fSzo(){var w=FT.szavak[FT.i];FT.pos=0;FT.hiba=false;fEl("fprompt").textContent=w.p;
+    var pcs=shuffle(w.parts.map(function(p,i){return {t:p[0],f:p[1],i:i}}).concat([{t:w.dec[0],f:w.dec[1],decoy:true}]));
+    var box=fEl("fbricks");box.textContent="";
+    pcs.forEach(function(pc){var b=el("button","brick "+pc.f,pc.t);b.type="button";b.addEventListener("click",function(){fTap(pc,b)});box.appendChild(b)});fRajz()}
+  function fRajz(drop){var w=FT.szavak[FT.i];renderTower(fEl("ftower"),w.parts.map(function(p,i){return i<FT.pos?{f:p[1],t:p[0]}:{f:p[1],empty:true,emptyTxt:"?"}}),drop);
+    renderWord(fEl("fword"),w.parts.slice(0,FT.pos).map(function(p){return {f:p[1],t:p[0]}}));fEl("fPont").textContent=FT.pont+" pont · "+FT.db+" szó"}
+  function fTap(pc,b){if(!FT.on)return;if(pc.decoy||pc.i!==FT.pos){FT.hiba=true;bump(b);return}
+    b.disabled=true;FT.pos++;
+    if(FT.pos===FT.szavak[FT.i].parts.length){FT.db++;if(!FT.hiba)FT.pont++;fRajz(FT.pos-1);FT.i=(FT.i+1)%FT.szavak.length;setTimeout(function(){if(FT.on)fSzo()},280)}else fRajz(FT.pos-1)}
+  function fIdo(){var m=Math.max(0,FT.veg-Date.now());var sec=Math.ceil(m/1000);fEl("fIdo").textContent=Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");if(m<=0)fVege()}
+  function fVege(){FT.on=false;clearInterval(FT.timer);[].forEach.call(fEl("fbricks").children,function(x){x.disabled=true});
+    vsHeti();var jobb=FT.pont>vsAllas.p||(FT.pont===vsAllas.p&&FT.db>vsAllas.db);if(jobb){vsAllas.p=FT.pont;vsAllas.db=FT.db;try{localStorage.setItem(VS_TAR,JSON.stringify(vsAllas))}catch(e){}VS.kozol();if(FT.pont>=5)VS.hir("új heti rekordja: "+FT.pont+" hibátlan torony.")}
+    univ.set("tt:futam");fEl("fprompt").textContent="Lejárt az idő: "+FT.pont+" hibátlan torony "+FT.db+" szóból."+(jobb?" Ez a heti legjobbad!":" A heti legjobbad: "+vsAllas.p+".");fEl("fstart").textContent="Új futam";fEl("fstart").hidden=false;rangRajz()}
+  fEl("fstart").addEventListener("click",function(){FT.szavak=futamSzavak(vsHet());FT.i=0;FT.pont=0;FT.db=0;FT.on=true;FT.veg=Date.now()+90000;fEl("fstart").hidden=true;fEl("frang").innerHTML="";fSzo();fIdo();clearInterval(FT.timer);FT.timer=setInterval(fIdo,250)});
+  function rangRajz(){var R=VS.rangsor(),hely=R.findIndex(function(x){return x.en})+1,e2=function(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+    var h='<p class="note">'+(VS.be?(VS.fent()+1)+" építő van most fent. ":VS.uz+" ")+'A múlt heti győztes tornya aranyszegélyt kap.</p>';
+    if(!VS.nev())h+='<div class="nevsor"><input id="vsNev" maxlength="24" placeholder="A neved a ranglistán"><button class="btn" type="button" id="vsOk">Beszállok</button></div>';
+    h+=R.length?'<table class="vtab"><tr><th>#</th><th>Építő</th><th class="sz">Pont</th></tr>'+R.slice(0,10).map(function(x,i){return '<tr class="'+(x.en?"en":"")+'"><td>'+(i+1)+'</td><td>'+e2(x.nev)+(x.en?" (te)":"")+(VS.jelen[x.id]&&!x.en?'<span class="fent">fent</span>':"")+'</td><td class="sz">'+(+x.v.p||0)+' / '+(+x.v.db||0)+'</td></tr>'}).join("")+'</table>':'<p class="note">Ezen a héten még senki sem futott. Az első futamod után itt leszel.</p>';
+    if(hely&&R.length>1)h+='<p class="note">Most a '+hely+'. vagy '+R.length+" közül.</p>";
+    if(VS.hirek.length)h+=VS.hirek.slice(0,3).map(function(x){return '<p class="note">'+e2(x.nev)+" "+e2(x.t)+"</p>"}).join("");
+    h+='<p class="note">A név és a heti pontszám egy nyilvános üzenetközvetítőn (HiveMQ) megy át a többi játékoshoz; más adat nem.</p>';
+    fEl("frang").innerHTML=h;var ok=fEl("vsOk");if(ok)ok.onclick=function(){var v=fEl("vsNev").value.trim();if(v){VS.nevBe(v);rangRajz()}}}
+  rangRajz();
 })();
 </script>
 
